@@ -1,0 +1,14 @@
+{
+  "poll_interval_seconds": 300,
+  "feeds": [
+    {
+      "id": "feed1",
+      "name": "@mybrand -> #announcements",
+      "ig_user_id": "PASTE_YOUR_INSTAGRAM_USER_ID_HERE",
+      "access_token": "PASTE_YOUR_LONG_LIVED_TOKEN_HERE",
+      "discord_webhook_url": "PASTE_YOUR_DISCORD_WEBHOOK_URL_HERE",
+      "enabled": true,
+      "ig_username": ""
+    }
+  ]
+}
