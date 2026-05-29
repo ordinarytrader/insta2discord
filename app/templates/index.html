@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>insta2discord</title>
+  <style>
+    :root { --pink: #e1306c; --bg: #0f1115; --card: #1a1d24; --text: #e6e8eb; --muted: #8b919a; --ok: #2ecc71; --err: #e74c3c; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+    h1 .ig { color: var(--pink); }
+    .sub { color: var(--muted); margin: 0 0 1.5rem; }
+    .card { background: var(--card); border: 1px solid #262a33; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 1rem; }
+    label { display: block; font-size: .82rem; color: var(--muted); margin: .6rem 0 .25rem; }
+    input[type=text], input[type=number], input[type=url] { width: 100%; padding: .55rem .65rem; border-radius: 8px; border: 1px solid #303642; background: #11141a; color: var(--text); font-size: .9rem; }
+    button { cursor: pointer; border: none; border-radius: 8px; padding: .5rem .9rem; font-size: .85rem; font-weight: 600; }
+    .btn-primary { background: var(--pink); color: #fff; }
+    .btn-ghost { background: #262a33; color: var(--text); }
+    .btn-danger { background: transparent; color: var(--err); border: 1px solid #3a2326; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid #20242c; }
+    .row:last-child { border-bottom: none; }
+    .feed-name { font-weight: 600; }
+    .feed-meta { color: var(--muted); font-size: .78rem; margin-top: .15rem; }
+    .pill { font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; }
+    .pill.on { background: #14331f; color: var(--ok); }
+    .pill.off { background: #332014; color: #e0a458; }
+    .actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .actions form { display: inline; }
+    .flash { padding: .65rem .85rem; border-radius: 8px; margin-bottom: .75rem; font-size: .88rem; }
+    .flash.success { background: #14331f; color: var(--ok); }
+    .flash.error { background: #331417; color: var(--err); }
+    .status { font-size: .8rem; color: var(--muted); }
+    .status b { color: var(--ok); }
+    details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+    code { background: #11141a; padding: .1rem .35rem; border-radius: 4px; font-size: .82rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="ig">insta</span>2discord</h1>
+  <p class="sub">Forward new Instagram posts to your Discord channels.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="card">
+    <h2>Feeds</h2>
+    {% if config.feeds %}
+      {% for feed in config.feeds %}
+        <div class="row">
+          <div>
+            <div class="feed-name">{{ feed.name }}
+              <span class="pill {{ 'on' if feed.enabled else 'off' }}">{{ 'enabled' if feed.enabled else 'disabled' }}</span>
+            </div>
+            <div class="feed-meta">
+              IG ID {{ feed.ig_user_id }}{% if feed.ig_username %} · @{{ feed.ig_username }}{% endif %}
+              · {{ seen_counts.get(feed.id, 0) }} posts tracked
+            </div>
+          </div>
+          <div class="actions">
+            <form method="post" action="{{ url_for('test_feed', feed_id=feed.id) }}"><button class="btn-ghost" type="submit">Test</button></form>
+            <form method="post" action="{{ url_for('toggle_feed', feed_id=feed.id) }}"><button class="btn-ghost" type="submit">{{ 'Disable' if feed.enabled else 'Enable' }}</button></form>
+            <form method="post" action="{{ url_for('delete_feed', feed_id=feed.id) }}" onsubmit="return confirm('Delete this feed?');"><button class="btn-danger" type="submit">Delete</button></form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="status">No feeds yet. Add one below.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Add a feed</h2>
+    <form method="post" action="{{ url_for('add_feed') }}">
+      <label for="name">Label (optional)</label>
+      <input type="text" id="name" name="name" placeholder="@mybrand → #announcements">
+      <div class="grid2">
+        <div>
+          <label for="ig_user_id">Instagram Business/Creator account ID</label>
+          <input type="text" id="ig_user_id" name="ig_user_id" placeholder="17841400000000000" required>
+        </div>
+        <div>
+          <label for="discord_webhook_url">Discord webhook URL</label>
+          <input type="url" id="discord_webhook_url" name="discord_webhook_url" placeholder="https://discord.com/api/webhooks/..." required>
+        </div>
+      </div>
+      <label for="access_token">Long-lived access token</label>
+      <input type="text" id="access_token" name="access_token" placeholder="IGQVJ..." required>
+      <div style="margin-top:1rem;"><button class="btn-primary" type="submit">Add feed</button></div>
+    </form>
+    <details style="margin-top:1rem;">
+      <summary>How do I get these values?</summary>
+      <p class="status" style="line-height:1.6;">
+        See <code>README.md</code> for the full walkthrough. In short: convert your IG account to
+        Business/Creator and link it to a Facebook Page, create a Meta app, grant
+        <code>instagram_basic</code>, generate a long-lived token, and get your IG user ID. The Discord
+        webhook URL comes from <em>Channel Settings → Integrations → Webhooks → New Webhook → Copy URL</em>.
+      </p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Settings</h2>
+    <form method="post" action="{{ url_for('update_settings') }}">
+      <label for="poll_interval_seconds">Poll interval (seconds, min 60)</label>
+      <input type="number" id="poll_interval_seconds" name="poll_interval_seconds" min="60" value="{{ config.poll_interval_seconds }}">
+      <div style="margin-top:1rem; display:flex; gap:.5rem; align-items:center;">
+        <button class="btn-ghost" type="submit">Save settings</button>
+      </div>
+    </form>
+    <hr style="border-color:#262a33; margin:1rem 0;">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="status">Poller: <b>{{ 'running' if poller_alive else 'stopped' }}</b> · checks every {{ config.poll_interval_seconds }}s</span>
+      <form method="post" action="{{ url_for('poll_now') }}"><button class="btn-primary" type="submit">Poll now</button></form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

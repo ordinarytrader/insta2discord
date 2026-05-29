@@ -1,0 +1,16 @@
+# Local config & state (contain secrets / runtime data)
+config.json
+state.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# OS
+.DS_Store
