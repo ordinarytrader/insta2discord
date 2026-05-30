@@ -1,0 +1,43 @@
+# systemd service to run insta2discord 24/7 on a Raspberry Pi.
+#
+# This keeps the tool running continuously, auto-starts it when the Pi boots,
+# and restarts it automatically if it ever crashes or the power blips.
+#
+# Install (see HOSTING_RASPBERRY_PI.md for the full walkthrough):
+#   1. Copy this file to /etc/systemd/system/insta2discord.service
+#   2. Adjust the User and paths below if your username/folder differ.
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable --now insta2discord
+#
+# Check on it any time with:
+#   systemctl status insta2discord
+#   journalctl -u insta2discord -f      (live logs)
+
+[Unit]
+Description=insta2discord - forward new Instagram posts to Discord
+# Wait until the network is up before starting (we need internet).
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# The Linux user the tool runs as. On Raspberry Pi OS this is usually "pi".
+# If you chose a different username when flashing the card, change it here.
+User=pi
+
+# Folder where you put the project. Adjust if you cloned it elsewhere.
+WorkingDirectory=/home/pi/insta2discord
+
+# Use the Python inside the project's virtual environment (created during setup).
+ExecStart=/home/pi/insta2discord/.venv/bin/python run.py
+
+# Keep the GUI on the Pi only-ish: it binds to all interfaces so you can reach
+# it from your laptop on the same home network at http://<pi-ip>:8080
+Environment=HOST=0.0.0.0
+Environment=PORT=8080
+
+# Restart automatically if it ever exits unexpectedly.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

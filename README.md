@@ -23,6 +23,17 @@ Instagram Graph API  ──poll──▶  insta2discord  ──webhook──▶ 
 - **Retry-safe** — if Discord is down, the post stays queued and is retried on
   the next cycle.
 
+## Where to host it
+
+This needs to run somewhere that stays on. Pick a guide:
+
+- **Raspberry Pi (recommended for always-on):** [`HOSTING_RASPBERRY_PI.md`](HOSTING_RASPBERRY_PI.md)
+  — runs 24/7 as a proper background service, auto-starts on boot.
+- **Shared web hosting (HostGator / cPanel):** [`HOSTING_HOSTGATOR.md`](HOSTING_HOSTGATOR.md)
+  — free if you already have it, via a scheduled cron job.
+- **Your own desktop:** just run `python run.py` (below) — only works while the
+  computer is on.
+
 ## Why the Graph API (and not scraping)
 
 Instagram blocks unofficial scraping and there's no public RSS feed. The
